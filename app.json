@@ -15,9 +15,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.erpide.meetwitma",
+      "buildNumber": "1",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Meet Witma uses your photo library to set profile photos.",
-        "NSCameraUsageDescription": "Meet Witma uses your camera to take profile photos."
+        "NSCameraUsageDescription": "Meet Witma uses your camera to take profile photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
