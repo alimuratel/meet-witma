@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#07070F">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net fonts.googleapis.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://translate.googleapis.com https://api.groq.com https://randomuser.me; media-src 'self' blob: https:;">
   <meta name="description" content="Meet Witma — Dil engeli olmadan dünyayla tanış. Gerçek zamanlı çeviri ile flört et.">
   <meta property="og:title" content="Meet Witma — No Language Barrier">
   <meta property="og:description" content="Dil engeli olmadan dünyayla tanış. Gerçek zamanlı çeviri.">
@@ -102,7 +103,7 @@
   <nav class="landing-nav">
     <div class="landing-logo">
       <div class="mw-logo mw-logo--sm">
-        <img src="logo.png" class="mw-logo-icon" alt="">
+        <img src="logo.png" class="mw-logo-icon" alt="Meet WiTMA">
         <div class="mw-logo-text"><span class="mw-logo-meet">Meet</span><span class="mw-logo-witma">WiTMA</span></div>
       </div>
     </div>
@@ -243,7 +244,7 @@
   <div class="auth-card">
     <div class="auth-logo">
       <div class="mw-logo mw-logo--lg">
-        <img src="logo.png" class="mw-logo-icon" alt="">
+        <img src="logo.png" class="mw-logo-icon" alt="Meet WiTMA">
         <div class="mw-logo-text"><span class="mw-logo-meet">Meet</span><span class="mw-logo-witma">WiTMA</span></div>
       </div>
     </div>
@@ -530,7 +531,7 @@
   <div class="app-header">
     <div class="app-logo">
       <div class="mw-logo mw-logo--sm">
-        <img src="logo.png" class="mw-logo-icon" alt="">
+        <img src="logo.png" class="mw-logo-icon" alt="Meet WiTMA">
         <div class="mw-logo-text"><span class="mw-logo-meet">Meet</span><span class="mw-logo-witma">WiTMA</span></div>
       </div>
     </div>
@@ -549,11 +550,11 @@
         </div>
       </div>
       <div class="swipe-actions">
-        <button class="action-btn action-rewind" onclick="showToast(I18N.t('toast.back_plus'))" title="Geri Al">↺</button>
-        <button class="action-btn action-nope"   onclick="actionSwipe('left')"  title="Geç">✕</button>
-        <button class="action-btn action-super"  onclick="actionSwipe('super')" title="Süper Beğeni">★</button>
-        <button class="action-btn action-like"   onclick="actionSwipe('right')" title="Beğen">♥</button>
-        <button class="action-btn action-boost"  onclick="showToast(I18N.t('toast.boost_plus'))" title="Boost">↑</button>
+        <button class="action-btn action-rewind" onclick="showToast(I18N.t('toast.back_plus'))" title="Geri Al" aria-label="Geri Al">↺</button>
+        <button class="action-btn action-nope"   onclick="actionSwipe('left')"  title="Geç" aria-label="Geç">✕</button>
+        <button class="action-btn action-super"  onclick="actionSwipe('super')" title="Süper Beğeni" aria-label="Süper Beğeni">★</button>
+        <button class="action-btn action-like"   onclick="actionSwipe('right')" title="Beğen" aria-label="Beğen">♥</button>
+        <button class="action-btn action-boost"  onclick="showToast(I18N.t('toast.boost_plus'))" title="Boost" aria-label="Boost">↑</button>
       </div>
     </div>
 

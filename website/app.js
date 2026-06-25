@@ -156,7 +156,7 @@ function verifyAge(isAdult) {
   }
   localStorage.setItem('mw_age', '1');
   S.ageVerified = true;
-  const session = sb?.auth?.getSession?.();
+  // session is unused here; just navigate to landing
   showOnly('pg-landing');
 }
 
@@ -369,6 +369,8 @@ function collectSetupStep(step) {
     const year  = document.getElementById('dob-year')?.value;
     if (day && month && year) {
       d.birth_date = `${year}-${month}-${day}`;
+      const bdTest = new Date(`${year}-${month}-${day}T00:00:00Z`);
+      if (isNaN(bdTest.getTime())) { showToast('Geçersiz doğum tarihi'); return false; }
       const bd = new Date(d.birth_date);
       d.age = Math.floor((Date.now() - bd) / (365.25*24*3600*1000));
     }
@@ -472,6 +474,10 @@ async function handlePhotoUpload(idx) {
   input.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (file.size > MAX_SIZE) { showToast('Fotoğraf max 8MB olabilir'); return; }
+    if (!ALLOWED.includes(file.type)) { showToast('Sadece JPG, PNG, WebP veya GIF'); return; }
     const slot = document.querySelector(`.photo-slot[data-idx="${idx}"]`);
     slot.innerHTML = '<div class="spinner"></div>';
     const ext  = file.name.split('.').pop() || 'jpg';
@@ -534,7 +540,7 @@ async function saveSetup(skipPhoto = false) {
     { phone: S.user.phone, name: d.name || S.user.phone, updated_at: new Date().toISOString() },
     { onConflict: 'phone' }
   );
-  if (uerr) console.warn('users upsert:', uerr.message);
+  // upsert errors are non-critical (user row may already exist)
 
   const { error } = await sb.from('meet_profiles').upsert(profileData, { onConflict: 'phone' });
   if (error) {
@@ -703,6 +709,8 @@ function renderSwipeStack() {
         <p>Yakında daha fazla profil göreceksin!</p>
         <button class="btn btn-outline btn-sm mt-16" onclick="loadCards()">Yenile</button>
       </div>`;
+    // Auto-retry after 30s
+    setTimeout(() => { if (S.activeTab === 'swipe' && !S.cards.length) loadCards(); }, 30000);
     return;
   }
 
@@ -970,25 +978,40 @@ function spawnConfetti() {
     `;
     document.getElementById('ov-match').appendChild(c);
     c.addEventListener('animationend', () => c.remove());
+    setTimeout(() => c.remove(), 4000);
   }
 }
 
 // ── Matches & Conversations ──────────────────────────────────────────
 async function loadMatches() {
-  const { data } = await sb.from('meet_matches')
+  const { data, error } = await sb.from('meet_matches')
     .select('*')
     .or(`phone1.eq.${S.user.phone},phone2.eq.${S.user.phone}`)
     .order('matched_at', { ascending: false })
     .limit(20);
+  if (error) { console.error('loadMatches:', error.message); return; }
   S.matches = data || [];
   renderNewMatches();
 }
 
 async function loadConversations() {
   // Single RPC call — no N+1 queries
-  const { data } = await sb.rpc('get_conversations', { me: S.user.phone, lim: 30 });
-  S.conversations = data || [];
+  const { data, error } = await sb.rpc('get_conversations', { me: S.user.phone, lim: 30 });
+  if (error) { console.error('loadConversations:', error.message); S.conversations = []; }
+  else S.conversations = data || [];
   renderConversations();
+  // Update unread badge
+  const unreadCount = (data || []).filter(c => c.last_msg && !c.last_msg.seen && c.last_msg.sender_phone !== S.user.phone).length;
+  const badge = document.getElementById('matches-badge');
+  if (badge) {
+    if (unreadCount > 0) {
+      badge.classList.add('has-badge');
+      badge.dataset.count = unreadCount;
+    } else {
+      badge.classList.remove('has-badge');
+      delete badge.dataset.count;
+    }
+  }
   // Also refresh the new-matches bubbles from matches
   await loadMatches();
 }
@@ -1130,8 +1153,10 @@ function subscribeChat() {
 
 async function sendMessage() {
   const input = document.getElementById('chat-input');
+  const sendBtn = document.querySelector('.send-btn');
   const text  = input.value.trim();
   if (!text) return;
+  if (sendBtn) sendBtn.disabled = true;
   input.value = ''; autoResizeInput(input);
 
   const msg = {
@@ -1166,15 +1191,16 @@ async function sendMessage() {
   });
 
   if (error) {
-    // Remove optimistic message
     S.messages = S.messages.filter(m => m.id !== tempMsg.id);
     const el = document.querySelector(`[data-tempid="${tempMsg.id}"]`);
     if (el) el.remove();
-    showToast('Mesaj gönderilemedi: ' + error.message);
+    showToast(I18N.t('toast.msg_error'));
     input.value = text;
+    if (sendBtn) sendBtn.disabled = false;
     return;
   }
 
+  if (sendBtn) sendBtn.disabled = false;
   // Trigger AI/bot reply if chatting with a demo user
   if (S.chatRoom && isDemoUser(S.chatRoom.peer_phone)) {
     maybeBotReply(S.chatRoom.room_id, S.chatRoom.peer_phone, text);
@@ -1627,4 +1653,9 @@ document.addEventListener('keydown', (e) => {
 
 document.getElementById('chat-input')?.addEventListener('input', function() {
   autoResizeInput(this);
+});
+
+// ── Cleanup on page unload ────────────────────────────────────────
+window.addEventListener('beforeunload', () => {
+  S.realtimeSub?.unsubscribe();
 });

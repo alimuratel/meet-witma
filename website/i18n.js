@@ -146,12 +146,19 @@ const I18N = {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
-        const data = JSON.parse(cached);
-        Object.keys(data).forEach(k => {
-          if (!this.strings[k]) this.strings[k] = {};
-          this.strings[k][lang] = data[k];
-        });
-        return;
+        const parsed = JSON.parse(cached);
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        const isValid = !parsed.ts || (Date.now() - parsed.ts) < THIRTY_DAYS;
+        if (isValid) {
+          const data = parsed.data || parsed;
+          Object.keys(data).forEach(k => {
+            if (!this.strings[k]) this.strings[k] = {};
+            this.strings[k][lang] = data[k];
+          });
+          return;
+        }
+        // Cache expired — remove it
+        localStorage.removeItem(cacheKey);
       }
     } catch {}
 
@@ -174,7 +181,7 @@ const I18N = {
           cache[k] = v;
         }
       });
-      localStorage.setItem(cacheKey, JSON.stringify(cache));
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: cache }));
     } catch (e) { console.warn('i18n translate failed', e); }
   },
 
