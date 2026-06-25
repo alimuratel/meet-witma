@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f0f13">
+  <meta name="description" content="Meet Witma — Dil engeli olmadan dünyayla tanış. Gerçek zamanlı çeviri ile flört et.">
+  <meta property="og:title" content="Meet Witma — No Language Barrier">
+  <meta property="og:description" content="Dil engeli olmadan dünyayla tanış. Gerçek zamanlı çeviri.">
+  <title>Meet Witma — No Language Barrier™</title>
+  <link rel="icon" href="logo.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<!-- ── TOAST ──────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── COOKIE CONSENT ─────────────────────────────────────────────── -->
+<div id="cookie-banner">
+  <div class="cookie-title">🍪 Çerez Tercihleri</div>
+  <div class="cookie-desc">Sana daha iyi bir deneyim sunmak için çerezler kullanıyoruz. KVKK kapsamında tercihlerini belirle.</div>
+  <div class="cookie-toggles">
+    <div class="cookie-toggle">
+      <div>
+        <div>Zorunlu</div>
+        <span>Her zaman aktif</span>
+      </div>
+      <div class="toggle-switch on disabled"></div>
+    </div>
+    <div class="cookie-toggle" onclick="toggleCookie('analytics')">
+      <div>
+        <div>Analitik</div>
+        <span>Kullanım istatistikleri</span>
+      </div>
+      <div class="toggle-switch" id="toggle-analytics"></div>
+    </div>
+    <div class="cookie-toggle" onclick="toggleCookie('marketing')">
+      <div>
+        <div>Pazarlama</div>
+        <span>Kişisel reklamlar</span>
+      </div>
+      <div class="toggle-switch" id="toggle-marketing"></div>
+    </div>
+    <div class="cookie-toggle" onclick="toggleCookie('preference')">
+      <div>
+        <div>Tercih</div>
+        <span>Dil ve tema</span>
+      </div>
+      <div class="toggle-switch" id="toggle-preference"></div>
+    </div>
+  </div>
+  <div class="cookie-btns">
+    <button class="btn btn-outline btn-sm" onclick="acceptCookies(false)">Seçilenleri Kabul Et</button>
+    <button class="btn btn-primary btn-sm" onclick="acceptCookies(true)">Tümünü Kabul Et</button>
+  </div>
+  <div style="margin-top:10px;text-align:center;font-size:12px;color:var(--muted)">
+    <a href="#" onclick="showLegal('cookies');return false" style="color:var(--muted)">Çerez Politikası</a> ·
+    <a href="#" onclick="showLegal('kvkk');return false"    style="color:var(--muted)">KVKK</a>
+  </div>
+</div>
+
+<!-- ── SUPABASE NOT CONFIGURED ────────────────────────────────────── -->
+<div id="pg-setup-supabase" class="page hidden">
+  <div style="font-size:56px;margin-bottom:16px">⚙️</div>
+  <h2>Supabase Yapılandırması Gerekli</h2>
+  <p style="color:var(--muted);margin:8px 0 24px">Meet Witma için yeni bir Supabase projesi oluştur ve aşağıdaki dosyayı güncelle:</p>
+  <code>website/config.js → MEET_URL ve MEET_KEY</code>
+  <br><br>
+  <code>website/schema.sql → Supabase SQL Editor'de çalıştır</code>
+  <br><br>
+  <p style="color:var(--muted);font-size:13px">Auth: Dashboard → Authentication → Providers → Phone → Enable → Twilio ekle</p>
+</div>
+
+<!-- ── AGE GATE ─────────────────────────────────────────────────────── -->
+<div id="pg-age-gate" class="page hidden">
+  <div class="age-icon">🔞</div>
+  <h2>Yaş Doğrulama</h2>
+  <p style="max-width:300px;text-align:center">Meet Witma yalnızca 18 yaş ve üzeri kullanıcılara açıktır.</p>
+  <div id="age-denied" class="hidden" style="color:var(--pink);font-size:14px;text-align:center">
+    Üzgünüz, bu platforma erişim için 18 yaşında olmanız gerekmektedir.
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:300px;margin-top:8px">
+    <button class="btn btn-primary" onclick="verifyAge(true)">18 Yaşında veya Büyüğüm</button>
+    <button class="btn btn-ghost"   onclick="verifyAge(false)">18 Yaşından Küçüğüm</button>
+  </div>
+  <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:16px;max-width:280px">
+    Devam ederek <a href="#" onclick="showLegal('terms');return false" style="color:var(--pink)">Kullanım Koşulları</a>'nı
+    ve <a href="#" onclick="showLegal('kvkk');return false" style="color:var(--pink)">KVKK Aydınlatma Metni</a>'ni kabul etmiş sayılırsın.
+  </p>
+</div>
+
+<!-- ── LANDING PAGE ──────────────────────────────────────────────────── -->
+<div id="pg-landing" class="page hidden scroll-page">
+
+  <!-- Nav -->
+  <nav class="landing-nav">
+    <div class="landing-logo"><img src="logo.png" alt="Meet Witma" class="logo-img logo-img-sm"></div>
+    <div class="landing-nav-btns">
+      <button class="btn btn-ghost btn-sm" onclick="showAuth()">Giriş Yap</button>
+      <button class="btn btn-primary btn-sm" onclick="showAuth()">Ücretsiz Başla</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Dil bariyerini yıkan flört uygulaması
+    </div>
+    <h1>No Language<br><span class="hero-gradient-text">Barrier.™</span></h1>
+    <p>Dünyadan biriyle tanış, WITMA modu anında çevirsin. Türkçe yaz, Japonca okusun.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary" onclick="showAuth()" style="font-size:18px;padding:16px 36px">
+        Şimdi Başla — Ücretsiz
+      </button>
+      <a class="btn btn-outline" href="#how-it-works">Nasıl Çalışır?</a>
+    </div>
+
+    <!-- Phone mockup fan -->
+    <div class="hero-phones">
+      <div class="phone-mock"><div class="phone-mock-placeholder">🌍</div></div>
+      <div class="phone-mock"><div class="phone-mock-placeholder">💬</div></div>
+      <div class="phone-mock"><div class="phone-mock-placeholder">💞</div></div>
+      <div class="phone-mock"><div class="phone-mock-placeholder">✨</div></div>
+      <div class="phone-mock"><div class="phone-mock-placeholder">🗺️</div></div>
+    </div>
+  </section>
+
+  <!-- WITMA Mode strip -->
+  <section class="section">
+    <div class="witma-strip">
+      <div class="witma-badge-big">WITMA Modu</div>
+      <h2 style="margin-bottom:12px">Dil farkı artık engel değil</h2>
+      <p style="max-width:500px;margin:0 auto">Eşleştiğin kişi farklı bir dil konuşuyor mu? Sorun değil. WITMA modu mesajlarını gerçek zamanlı olarak çeviriyor. Sen Türkçe yaz, o kendi dilinde okusun.</p>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section" id="how-it-works">
+    <div class="section-label">Nasıl Çalışır</div>
+    <h2 class="section-title">3 adımda tanış</h2>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Profil Oluştur</h3>
+        <p>Fotoğraflarını ekle, ilgi alanlarını seç, dilini belirle.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Sağa Kaydır</h3>
+        <p>Beğendiğin profilleri sağa çek, seni beğenenleri gör.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>WITMA ile Sohbet Et</h3>
+        <p>Eşleş ve dil bariyeri olmadan sohbet et.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Premium tiers -->
+  <section class="section" id="premium">
+    <div class="section-label">Premium</div>
+    <h2 class="section-title">Daha fazlası için</h2>
+    <p class="section-sub">Ücretsiz üyelikle başla, istediğin zaman yükselt.</p>
+    <div class="tiers">
+      <div class="tier-card">
+        <div class="tier-name">Ücretsiz</div>
+        <div class="tier-price">₺0 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Günlük 20 beğeni</li>
+          <li>WITMA modu</li>
+          <li>Sınırsız mesajlaşma</li>
+          <li>Temel profil</li>
+        </ul>
+        <button class="btn btn-outline btn-full" onclick="showAuth()">Başla</button>
+      </div>
+      <div class="tier-card popular">
+        <div class="tier-name">Plus</div>
+        <div class="tier-price">₺99 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Sınırsız beğeni</li>
+          <li>Seni beğenenleri gör</li>
+          <li>5 süper beğeni/gün</li>
+          <li>Profil yenileme</li>
+          <li>Reklamsız deneyim</li>
+        </ul>
+        <button class="btn btn-primary btn-full" onclick="showAuth()">Plus'a Geç</button>
+      </div>
+      <div class="tier-card">
+        <div class="tier-name">Gold</div>
+        <div class="tier-price">₺199 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Plus'ın her şeyi</li>
+          <li>Öncelikli profil gösterimi</li>
+          <li>Altın rozeti</li>
+          <li>Günlük 1 boost</li>
+          <li>Gelişmiş filtreler</li>
+          <li>Mesaj çeviri geçmişi</li>
+        </ul>
+        <button class="btn btn-outline btn-full" onclick="showAuth()">Gold'a Geç</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="footer-links">
+      <a href="#" onclick="showLegal('kvkk');return false">KVKK Aydınlatma Metni</a>
+      <a href="#" onclick="showLegal('privacy');return false">Gizlilik Politikası</a>
+      <a href="#" onclick="showLegal('terms');return false">Kullanım Koşulları</a>
+      <a href="#" onclick="showLegal('cookies');return false">Çerez Politikası</a>
+      <a href="mailto:hello@witma.app">İletişim</a>
+    </div>
+    <p>© 2026 WITMA Teknoloji A.Ş. · Tüm hakları saklıdır.</p>
+    <p style="margin-top:8px;font-size:12px">Meet Witma, Witma platformundan bağımsız, ayrı altyapıyla çalışmaktadır.</p>
+  </footer>
+
+</div>
+
+<!-- ── AUTH ──────────────────────────────────────────────────────────── -->
+<div id="pg-auth" class="page hidden">
+  <div class="auth-card">
+    <div class="auth-logo"><img src="logo.png" alt="Meet Witma" class="logo-img logo-img-md"></div>
+
+    <!-- Step 1: phone -->
+    <div id="auth-phone-step">
+      <div class="auth-title">Telefon ile Giriş</div>
+      <div class="auth-sub">Numarana SMS ile doğrulama kodu göndereceğiz</div>
+      <div class="phone-row">
+        <div class="country-code">
+          <select id="country-code-select" style="background:transparent;border:none;color:var(--text);font-size:15px;cursor:pointer;outline:none">
+            <option value="+90">🇹🇷 +90</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+7">🇷🇺 +7</option>
+            <option value="+81">🇯🇵 +81</option>
+            <option value="+82">🇰🇷 +82</option>
+            <option value="+86">🇨🇳 +86</option>
+            <option value="+971">🇦🇪 +971</option>
+          </select>
+        </div>
+        <input type="tel" id="auth-phone-input" placeholder="5XX XXX XX XX" inputmode="tel" autocomplete="tel">
+      </div>
+      <button id="btn-send-otp" class="btn btn-primary btn-full" onclick="sendOTP()">Kod Gönder</button>
+      <div style="text-align:center;font-size:12px;color:var(--muted)">
+        Devam ederek
+        <a href="#" onclick="showLegal('terms');return false" style="color:var(--pink)">Kullanım Koşulları</a>'nı ve
+        <a href="#" onclick="showLegal('kvkk');return false"  style="color:var(--pink)">KVKK</a>'yı kabul ediyorsun.
+      </div>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="auth-otp-step" class="hidden">
+      <div class="auth-title">Kodu Girin</div>
+      <div class="auth-sub"><span id="auth-phone-display"></span> numarasına gönderdik</div>
+      <div class="otp-row">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+        <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+      </div>
+      <div class="resend-row">
+        <span style="font-size:13px;color:var(--muted)">Kodu almadın mı?</span>
+        <button class="resend-btn" id="resend-btn" onclick="resendOTP()" disabled>Tekrar Gönder</button>
+        <span id="resend-counter" style="font-size:13px;color:var(--muted)"></span>
+      </div>
+      <button class="auth-back" onclick="document.getElementById('auth-otp-step').classList.add('hidden');document.getElementById('auth-phone-step').classList.remove('hidden')">← Geri</button>
+    </div>
+
+    <div style="text-align:center">
+      <button class="btn btn-ghost btn-sm" onclick="showOnly('pg-landing')">← Geri Dön</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFILE SETUP WIZARD v2 ──────────────────────────────────────── -->
+<div id="pg-setup" class="page hidden">
+
+  <!-- Sticky header -->
+  <div class="setup-hdr">
+    <button class="setup-hdr-back" onclick="setupBack()">←</button>
+    <div class="setup-prg-wrap">
+      <div class="setup-prg-track"><div class="setup-prg-fill" id="setup-prg-fill"></div></div>
+      <div class="setup-prg-dots" id="setup-prg-dots"></div>
+    </div>
+    <span class="setup-hdr-lbl" id="setup-step-lbl">1/8</span>
+  </div>
+
+  <div class="setup-body">
+
+    <!-- ── Step 1: Name + DOB + City ── -->
+    <div class="setup-step" id="setup-step-1">
+            <h2 class="setup-title">Merhaba! Seni tanıyalım</h2>
+      <p class="setup-sub">Bu bilgiler profilinde görünecek</p>
+      <div class="setup-form">
+        <div class="setup-field">
+          <label>İsmin</label>
+          <input type="text" id="setup-name" placeholder="Adın…" maxlength="30" autocomplete="given-name">
+        </div>
+        <div class="setup-field">
+          <label>Doğum Tarihin</label>
+          <div class="dob-row">
+            <select id="dob-day" class="dob-sel" onchange="updateDOBHint()"><option value="">Gün</option></select>
+            <select id="dob-month" class="dob-sel" onchange="updateDOBHint()">
+              <option value="">Ay</option>
+              <option value="01">Ocak</option><option value="02">Şubat</option>
+              <option value="03">Mart</option><option value="04">Nisan</option>
+              <option value="05">Mayıs</option><option value="06">Haziran</option>
+              <option value="07">Temmuz</option><option value="08">Ağustos</option>
+              <option value="09">Eylül</option><option value="10">Ekim</option>
+              <option value="11">Kasım</option><option value="12">Aralık</option>
+            </select>
+            <select id="dob-year" class="dob-sel" onchange="updateDOBHint()"><option value="">Yıl</option></select>
+          </div>
+          <div class="dob-hint" id="dob-hint"></div>
+        </div>
+        <div class="setup-field">
+          <label>Şehir <span class="optional-tag">isteğe bağlı</span></label>
+          <input type="text" id="setup-city" placeholder="İstanbul, Berlin, Tokyo…" maxlength="50">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 2: Gender + Sexuality ── -->
+    <div class="setup-step hidden" id="setup-step-2">
+            <h2 class="setup-title">Kimsin sen?</h2>
+      <p class="setup-sub">Daha iyi eşleşmeler için</p>
+      <div class="setup-sec-lbl">Cinsiyetin</div>
+      <div class="opt-cards" id="gender-cards">
+        <div class="opt-card" data-field="gender" data-val="man"       onclick="selectOpt('gender','man',this)"><span class="opt-lbl">Erkek</span></div>
+        <div class="opt-card" data-field="gender" data-val="woman"     onclick="selectOpt('gender','woman',this)"><span class="opt-lbl">Kadın</span></div>
+        <div class="opt-card" data-field="gender" data-val="nonbinary" onclick="selectOpt('gender','nonbinary',this)"><span class="opt-lbl">Non-binary</span></div>
+        <div class="opt-card" data-field="gender" data-val="other"     onclick="selectOpt('gender','other',this)"><span class="opt-lbl">Diğer</span></div>
+      </div>
+      <div class="setup-sec-lbl" style="margin-top:20px">Cinsel Yöneliminiz <span class="optional-tag">isteğe bağlı</span></div>
+      <div class="opt-cards" id="sexuality-cards">
+        <div class="opt-card" data-field="sexuality" data-val="straight"   onclick="selectOpt('sexuality','straight',this)"><span class="opt-lbl">Heteroseksüel</span></div>
+        <div class="opt-card" data-field="sexuality" data-val="gay"        onclick="selectOpt('sexuality','gay',this)"><span class="opt-lbl">Eşcinsel</span></div>
+        <div class="opt-card" data-field="sexuality" data-val="bisexual"   onclick="selectOpt('sexuality','bisexual',this)"><span class="opt-lbl">Biseksüel</span></div>
+        <div class="opt-card" data-field="sexuality" data-val="pansexual"  onclick="selectOpt('sexuality','pansexual',this)"><span class="opt-lbl">Panseksüel</span></div>
+        <div class="opt-card" data-field="sexuality" data-val="asexual"    onclick="selectOpt('sexuality','asexual',this)"><span class="opt-lbl">Aseksüel</span></div>
+        <div class="opt-card" data-field="sexuality" data-val="other"      onclick="selectOpt('sexuality','other',this)"><span class="opt-lbl">Diğer</span></div>
+      </div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 3: Looking for + Relationship Goal ── -->
+    <div class="setup-step hidden" id="setup-step-3">
+            <h2 class="setup-title">Ne Arıyorsun?</h2>
+      <p class="setup-sub">Sana en uygun kişileri gösterelim</p>
+      <div class="setup-sec-lbl">Kimlerle eşleşelim?</div>
+      <div class="opt-cards" id="looking-cards">
+        <div class="opt-card" data-field="looking_for" data-val="women"    onclick="selectOpt('looking_for','women',this)"><span class="opt-lbl">Kadınlar</span></div>
+        <div class="opt-card" data-field="looking_for" data-val="men"      onclick="selectOpt('looking_for','men',this)"><span class="opt-lbl">Erkekler</span></div>
+        <div class="opt-card" data-field="looking_for" data-val="everyone" onclick="selectOpt('looking_for','everyone',this)"><span class="opt-lbl">Herkes</span></div>
+      </div>
+      <div class="setup-sec-lbl" style="margin-top:20px">İlişki hedefin</div>
+      <div class="opt-cards wide" id="goal-cards">
+        <div class="opt-card" data-field="relationship_goal" data-val="serious"    onclick="selectOpt('relationship_goal','serious',this)"><div><div class="opt-card-title">Ciddi İlişki</div><div class="opt-card-desc">Uzun vadeli, anlamlı bir bağ</div></div></div>
+        <div class="opt-card" data-field="relationship_goal" data-val="casual"     onclick="selectOpt('relationship_goal','casual',this)"><div><div class="opt-card-title">Eğlenceli Randevular</div><div class="opt-card-desc">Yükümlülüksüz, keyifli buluşmalar</div></div></div>
+        <div class="opt-card" data-field="relationship_goal" data-val="friendship" onclick="selectOpt('relationship_goal','friendship',this)"><div><div class="opt-card-title">Arkadaşlık</div><div class="opt-card-desc">Samimi yeni bağlantılar kurmak</div></div></div>
+        <div class="opt-card" data-field="relationship_goal" data-val="adventure"  onclick="selectOpt('relationship_goal','adventure',this)"><div><div class="opt-card-title">Birlikte Keşif</div><div class="opt-card-desc">Seyahat ve macera ortağı</div></div></div>
+        <div class="opt-card" data-field="relationship_goal" data-val="open"       onclick="selectOpt('relationship_goal','open',this)"><div><div class="opt-card-title">Açık Görüşlüyüm</div><div class="opt-card-desc">Nereye götüreceğini görelim</div></div></div>
+      </div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 4: Lifestyle ── -->
+    <div class="setup-step hidden" id="setup-step-4">
+            <h2 class="setup-title">Yaşam Tarzın</h2>
+      <p class="setup-sub">Seni daha iyi tanıyalım</p>
+      <div class="setup-form">
+        <div class="setup-field">
+          <label>Boyun (cm) <span class="optional-tag">isteğe bağlı</span></label>
+          <div class="height-row">
+            <span class="height-val" id="height-display">170 cm</span>
+            <input type="range" id="setup-height" min="140" max="220" value="170" oninput="updateHeight(this)">
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Eğitim <span class="optional-tag">isteğe bağlı</span></label>
+          <div class="chip-group" id="education-chips">
+            <div class="chip" data-field="education" data-val="highschool" onclick="selectChip('education',this)">Lise</div>
+            <div class="chip" data-field="education" data-val="associate"  onclick="selectChip('education',this)">Ön Lisans</div>
+            <div class="chip" data-field="education" data-val="bachelor"   onclick="selectChip('education',this)">Lisans</div>
+            <div class="chip" data-field="education" data-val="master"     onclick="selectChip('education',this)">Yüksek Lisans</div>
+            <div class="chip" data-field="education" data-val="phd"        onclick="selectChip('education',this)">Doktora</div>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Meslek / Unvan <span class="optional-tag">isteğe bağlı</span></label>
+          <input type="text" id="setup-job" placeholder="Yazılım Geliştirici, Öğretmen…" maxlength="50">
+        </div>
+        <div class="setup-field">
+          <label>Sigara</label>
+          <div class="chip-group">
+            <div class="chip" data-field="smoking" data-val="never"     onclick="selectChip('smoking',this)">İçmiyorum</div>
+            <div class="chip" data-field="smoking" data-val="sometimes" onclick="selectChip('smoking',this)">Bazen</div>
+            <div class="chip" data-field="smoking" data-val="often"     onclick="selectChip('smoking',this)">İçiyorum</div>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Alkol</label>
+          <div class="chip-group">
+            <div class="chip" data-field="drinking" data-val="never"  onclick="selectChip('drinking',this)">İçmiyorum</div>
+            <div class="chip" data-field="drinking" data-val="social" onclick="selectChip('drinking',this)">Sosyal</div>
+            <div class="chip" data-field="drinking" data-val="often"  onclick="selectChip('drinking',this)">İçiyorum</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 5: Family + Values + Bio ── -->
+    <div class="setup-step hidden" id="setup-step-5">
+            <h2 class="setup-title">Aile ve Değerler</h2>
+      <p class="setup-sub">Daha uyumlu eşleşmeler için</p>
+      <div class="setup-form">
+        <div class="setup-field">
+          <label>Çocuk durumu</label>
+          <div class="chip-group">
+            <div class="chip" data-field="kids" data-val="have"    onclick="selectChip('kids',this)">Çocuklarım var</div>
+            <div class="chip" data-field="kids" data-val="want"    onclick="selectChip('kids',this)">İstiyorum</div>
+            <div class="chip" data-field="kids" data-val="maybe"   onclick="selectChip('kids',this)">Belki</div>
+            <div class="chip" data-field="kids" data-val="no"      onclick="selectChip('kids',this)">İstemiyorum</div>
+            <div class="chip" data-field="kids" data-val="unknown" onclick="selectChip('kids',this)">Bilmiyorum</div>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Din / Maneviyat <span class="optional-tag">isteğe bağlı</span></label>
+          <div class="chip-group">
+            <div class="chip" data-field="religion" data-val="islam"     onclick="selectChip('religion',this)">İslam</div>
+            <div class="chip" data-field="religion" data-val="christian" onclick="selectChip('religion',this)">Hristiyanlık</div>
+            <div class="chip" data-field="religion" data-val="jewish"    onclick="selectChip('religion',this)">Yahudilik</div>
+            <div class="chip" data-field="religion" data-val="buddhist"  onclick="selectChip('religion',this)">Budizm</div>
+            <div class="chip" data-field="religion" data-val="atheist"   onclick="selectChip('religion',this)">Ateist</div>
+            <div class="chip" data-field="religion" data-val="agnostic"  onclick="selectChip('religion',this)">Agnostik</div>
+            <div class="chip" data-field="religion" data-val="spiritual" onclick="selectChip('religion',this)">Manevi</div>
+            <div class="chip" data-field="religion" data-val="other"     onclick="selectChip('religion',this)">Diğer</div>
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Hakkımda <span class="optional-tag">isteğe bağlı</span></label>
+          <textarea id="setup-bio" placeholder="Kendinizden bahsedin — hobiler, hayaller, beklentiler…" maxlength="500" oninput="document.getElementById('bio-counter').textContent=this.value.length+'/500'"></textarea>
+          <div class="field-counter" id="bio-counter">0/500</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 6: Interests ── -->
+    <div class="setup-step hidden" id="setup-step-6">
+            <h2 class="setup-title">İlgi Alanların</h2>
+      <p class="setup-sub">En az 3 seç — profilinde gösterilir</p>
+      <div class="interest-grid" id="interests-grid"></div>
+      <button class="btn btn-primary btn-full mt-16" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 7: Language ── -->
+    <div class="setup-step hidden" id="setup-step-7">
+            <h2 class="setup-title">Hangi Dilleri Biliyorsun?</h2>
+      <p class="setup-sub">WITMA modunun kalbi — çeviri için kullanılır</p>
+      <div class="setup-sec-lbl">Ana Dilin</div>
+      <div class="lang-grid" id="main-lang-grid"></div>
+      <div class="setup-sec-lbl" style="margin-top:20px">Diğer Bildiğin Diller <span class="optional-tag">isteğe bağlı</span></div>
+      <div class="lang-grid" id="extra-lang-grid"></div>
+      <button class="btn btn-primary btn-full mt-24" onclick="setupNext()">Devam →</button>
+    </div>
+
+    <!-- ── Step 8: Photos ── -->
+    <div class="setup-step hidden" id="setup-step-8">
+            <h2 class="setup-title">Fotoğrafların</h2>
+      <p class="setup-sub">İlk fotoğraf kapak görselini olacak</p>
+      <div class="photo-grid-v2" id="photo-grid">
+        <div class="photo-slot" data-idx="0" onclick="handlePhotoUpload(0)">📷</div>
+        <div class="photo-slot" data-idx="1" onclick="handlePhotoUpload(1)">+</div>
+        <div class="photo-slot" data-idx="2" onclick="handlePhotoUpload(2)">+</div>
+        <div class="photo-slot" data-idx="3" onclick="handlePhotoUpload(3)">+</div>
+        <div class="photo-slot" data-idx="4" onclick="handlePhotoUpload(4)">+</div>
+        <div class="photo-slot" data-idx="5" onclick="handlePhotoUpload(5)">+</div>
+      </div>
+      <div class="photo-tips">
+        <div class="photo-tip">Net, güler yüzlü fotoğraflar daha çok beğeni alır</div>
+        <div class="photo-tip">Farklı ortam ve aktivitelerden kareler ekle</div>
+        <div class="photo-tip">Güneş gözlüklü veya sınırlayıcı fotoğraflardan kaçın</div>
+      </div>
+      <button id="btn-finish-setup" class="btn btn-primary btn-full mt-16" onclick="saveSetup()">
+        Keşfetmeye Başla 🚀
+      </button>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="saveSetup(true)">Fotoğraf eklemeden devam et →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MAIN APP ───────────────────────────────────────────────────────── -->
+<div id="pg-app" class="page hidden">
+
+  <div class="app-header">
+    <div class="app-logo"><img src="logo.png" alt="Meet Witma" class="logo-img logo-img-xs"></div>
+    <div class="app-header-btns">
+      <button class="icon-btn" onclick="showPremium('Premium özellikler')" title="Premium">Premium</button>
+    </div>
+  </div>
+
+  <div class="tab-content">
+
+    <!-- SWIPE TAB -->
+    <div class="tab-pane" id="tab-swipe">
+      <div class="swipe-stack">
+        <div id="swipe-stack-inner" style="width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center">
+          <div class="centered"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <div class="swipe-actions">
+        <button class="action-btn action-rewind" onclick="showToast('Geri alma — Plus gerekli')" title="Geri Al">↺</button>
+        <button class="action-btn action-nope"   onclick="actionSwipe('left')"  title="Geç">✕</button>
+        <button class="action-btn action-super"  onclick="actionSwipe('super')" title="Süper Beğeni">★</button>
+        <button class="action-btn action-like"   onclick="actionSwipe('right')" title="Beğen">♥</button>
+        <button class="action-btn action-boost"  onclick="showToast('Boost — Plus gerekli')" title="Boost">↑</button>
+      </div>
+    </div>
+
+    <!-- MATCHES TAB -->
+    <div class="tab-pane hidden" id="tab-matches">
+      <div style="padding:16px">
+        <h2 style="margin-bottom:16px">Eşleşmeler</h2>
+        <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Yeni Eşleşmeler</div>
+        <div class="matches-scroll" id="new-matches-scroll">
+          <div class="text-muted" style="font-size:14px">Henüz eşleşme yok</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin:16px 0 10px">Mesajlar</div>
+        <div class="conversations" id="conversations-list">
+          <div class="centered"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-pane hidden" id="tab-profile">
+      <div class="profile-info" style="padding-top:24px">
+        <div class="profile-name" id="profile-display-name">—</div>
+        <div class="profile-sub"  id="profile-display-sub">—</div>
+        <div class="profile-bio"  id="profile-display-bio"></div>
+
+        <!-- Profile completion card -->
+        <div class="completion-card" id="completion-card" style="display:none">
+          <div class="completion-hdr">
+            <span class="completion-lbl">Profil Tamamlanma</span>
+            <span class="completion-pct" id="completion-pct">0%</span>
+          </div>
+          <div class="completion-track"><div class="completion-fill" id="completion-fill" style="width:0%"></div></div>
+          <div class="completion-tags" id="completion-tags"></div>
+        </div>
+
+        <div class="profile-section" style="margin-top:8px">
+          <div class="settings-list">
+            <div class="settings-item" onclick="showProfileEdit()">
+              <div class="settings-text"><strong>Profili Düzenle</strong><span>İsim, bio, fotoğraf ve daha fazlası</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showPremium('Premium özellikler')">
+              <div class="settings-text"><strong>Premium</strong><span>Plus, Gold, Platinum</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showLegal('kvkk')">
+              <div class="settings-text"><strong>KVKK Aydınlatma</strong><span>Veri işleme bilgisi</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showLegal('privacy')">
+              <div class="settings-text"><strong>Gizlilik Politikası</strong></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showLegal('terms')">
+              <div class="settings-text"><strong>Kullanım Koşulları</strong></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showCookieBanner()">
+              <div class="settings-text"><strong>Çerez Tercihleri</strong><span>KVKK onaylarını yönet</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="showToast('Destek: hello@witma.app')">
+              <div class="settings-text"><strong>Destek</strong><span>hello@witma.app</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="logout()">
+              <div class="settings-text"><strong>Çıkış Yap</strong></div>
+              <div class="settings-chevron">›</div>
+            </div>
+            <div class="settings-item" onclick="deleteAccount()" style="color:var(--pink)">
+              <div class="settings-text"><strong style="color:var(--pink)">Hesabı Sil</strong><span>Tüm veriler kalıcı silinir</span></div>
+              <div class="settings-chevron">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="swipe"   onclick="switchTab('swipe')">
+      <span>Keşfet</span>
+    </button>
+    <button class="nav-btn" data-tab="matches" onclick="switchTab('matches')">
+      <span class="nav-badge" id="matches-badge">Eşleşmeler</span>
+    </button>
+    <button class="nav-btn" data-tab="profile" onclick="switchTab('profile')">
+      <span>Profil</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ── CHAT ROOM ──────────────────────────────────────────────────────── -->
+<div id="pg-chat" class="page hidden">
+  <div class="chat-header">
+    <button class="chat-back-btn" onclick="closeChat()">←</button>
+    <div class="chat-peer-avatar" id="chat-peer-av">
+      <div class="conv-avatar-placeholder">😊</div>
+    </div>
+    <div class="chat-peer-info">
+      <div class="chat-peer-name" id="chat-peer-name">—</div>
+      <div class="chat-peer-sub">Meet Witma Eşleşmesi</div>
+    </div>
+    <div class="chat-actions">
+      <button class="icon-btn" onclick="showChatMenu()">⋮</button>
+    </div>
+  </div>
+
+  <div class="witma-mode-bar" id="witma-bar">
+    WITMA Modu Aktif
+    <button class="witma-toggle" onclick="toggleWitmaMode()">Kapat</button>
+  </div>
+
+  <div class="messages-list" id="messages-list">
+    <div class="centered"><div class="spinner"></div></div>
+  </div>
+
+  <div class="chat-input-row">
+    <textarea class="chat-input" id="chat-input" placeholder="Mesaj yaz…" rows="1"></textarea>
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ── MATCH OVERLAY ──────────────────────────────────────────────────── -->
+<div id="ov-match" class="hidden">
+  <div class="match-text-anim match-title">Eşleşti!</div>
+  <div class="match-sub">İkiniz de birbirini beğendi</div>
+  <div class="match-avatars">
+    <div class="match-av" id="match-my-av"></div>
+    <div class="match-heart">♥</div>
+    <div class="match-av" id="match-peer-av"></div>
+  </div>
+  <div style="font-size:18px;font-weight:700" id="match-peer-name"></div>
+  <div class="match-btns">
+    <button id="match-chat-btn" class="btn btn-primary btn-full">Mesaj Gönder</button>
+    <button class="btn btn-ghost btn-full" onclick="hideMatchOverlay()">Keşfetmeye Devam Et</button>
+  </div>
+</div>
+
+<!-- ── PREMIUM PAGE ────────────────────────────────────────────────────── -->
+<div id="pg-premium" class="page hidden scroll-page">
+  <div class="premium-header">
+    <button class="legal-back" onclick="closePremium()">←</button>
+    <h3 style="flex:1;text-align:center">Premium</h3>
+    <div style="width:36px"></div>
+  </div>
+  <div class="premium-hero">
+    <div class="premium-crown">★</div>
+    <h2>Sınırları Kaldır</h2>
+    <p id="premium-reason" style="color:var(--pink);margin-top:8px;font-weight:600"></p>
+    <p style="max-width:320px;margin:0 auto">Sınırsız beğeni, süper like ve çok daha fazlası</p>
+  </div>
+  <div style="padding:0 16px 32px">
+    <div class="tiers">
+      <div class="tier-card" onclick="selectPremiumPlan('Plus')">
+        <div class="tier-name">Plus</div>
+        <div class="tier-price">₺99 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Sınırsız beğeni</li>
+          <li>Seni beğenenleri gör</li>
+          <li>5 süper beğeni/gün</li>
+          <li>Profil yenileme</li>
+          <li>Reklamsız</li>
+        </ul>
+        <button class="btn btn-primary btn-full">Plus'a Geç</button>
+      </div>
+      <div class="tier-card popular" onclick="selectPremiumPlan('Gold')">
+        <div class="tier-name">Gold</div>
+        <div class="tier-price">₺199 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Plus'ın hepsi</li>
+          <li>Öncelikli gösterim</li>
+          <li>Günlük 1 boost</li>
+          <li>Altın rozeti</li>
+          <li>Gelişmiş filtreler</li>
+          <li>Çeviri geçmişi</li>
+        </ul>
+        <button class="btn btn-primary btn-full">Gold'a Geç</button>
+      </div>
+      <div class="tier-card" onclick="selectPremiumPlan('Platinum')">
+        <div class="tier-name">Platinum</div>
+        <div class="tier-price">₺349 <span>/ay</span></div>
+        <ul class="tier-features">
+          <li>Gold'un hepsi</li>
+          <li>Sınırsız boost</li>
+          <li>Profil doğrulama önceliği</li>
+          <li>Özel destek</li>
+          <li>Erken özellik erişimi</li>
+        </ul>
+        <button class="btn btn-outline btn-full">Platinum'a Geç</button>
+      </div>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:12px;margin-top:24px;line-height:1.7">
+      Abonelikler otomatik olarak yenilenir. Yenileme tarihinden en az 24 saat önce iptal edebilirsiniz.
+      <br>
+      <a href="#" onclick="showLegal('terms');return false"   style="color:var(--muted)">Kullanım Koşulları</a> ·
+      <a href="#" onclick="showLegal('privacy');return false" style="color:var(--muted)">Gizlilik</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── LEGAL PAGES ────────────────────────────────────────────────────── -->
+<div id="pg-legal" class="page hidden scroll-page">
+  <div class="legal-header">
+    <button class="legal-back" onclick="closeLegal()">←</button>
+    <div style="flex:1"></div>
+  </div>
+  <div class="legal-content" id="legal-content"></div>
+</div>
+
+<!-- ── SCRIPTS ────────────────────────────────────────────────────────── -->
+<script src="config.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Populate year dropdown
+  const yearSel = document.getElementById('dob-year');
+  if (yearSel) {
+    const maxY = new Date().getFullYear() - 18;
+    for (let y = maxY; y >= 1940; y--) {
+      yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+  }
+  // Populate day dropdown
+  const daySel = document.getElementById('dob-day');
+  if (daySel) {
+    for (let d = 1; d <= 31; d++) {
+      daySel.innerHTML += `<option value="${String(d).padStart(2,'0')}">${d}</option>`;
+    }
+  }
+});
+</script>
+<script src="app.js"></script>
+
+</body>
+</html>
