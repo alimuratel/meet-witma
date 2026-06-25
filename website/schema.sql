@@ -37,6 +37,7 @@ create table if not exists meet_profiles (
   boost_expires  timestamptz,                    -- aktif boost süresi
   swipe_count    int      default 0,             -- günlük swipe sayacı (reset ile)
   swipe_reset_at timestamptz default now(),      -- günlük reset zamanı
+  push_token     text,                           -- Expo push notification token
   updated_at     timestamptz default now()
 );
 -- Swipe candidates: aktif, son aktif önce

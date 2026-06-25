@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Meet Witma",
+    "slug": "meet-witma",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "meetwitma",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#090A0F"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.erpide.meetwitma",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Meet Witma uses your photo library to set profile photos.",
+        "NSCameraUsageDescription": "Meet Witma uses your camera to take profile photos."
+      }
+    },
+    "android": {
+      "package": "com.erpide.meetwitma",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#090A0F"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": { "projectId": "" }
+    },
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": { "url": "" }
+  }
+}
