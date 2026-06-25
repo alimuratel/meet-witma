@@ -34,6 +34,7 @@ const S = {
 window.addEventListener('DOMContentLoaded', boot);
 
 async function boot() {
+  await I18N.init();
   if (!MEET_CONFIGURED) {
     showOnly('pg-setup-supabase');
     return;
@@ -1027,7 +1028,7 @@ function renderConversations() {
     return;
   }
   list.innerHTML = S.conversations.map(conv => {
-    const lastText = conv.last_msg?.text ? escHtml(conv.last_msg.text.slice(0, 50)) : 'Eşleştiniz! Merhaba de';
+    const lastText = conv.last_msg?.text ? escHtml(conv.last_msg.text.slice(0, 50)) : I18N.t('conv.say_hi');
     const isMine   = conv.last_msg?.sender_phone === S.user.phone;
     const unread   = conv.last_msg && !conv.last_msg.seen && !isMine;
     const time     = conv.last_msg ? formatTime(conv.last_msg.created_at) : formatTime(conv.matched_at);
@@ -1085,7 +1086,7 @@ function closeChat() {
 }
 
 function showChatMenu() {
-  showToast('Konuşmayı sil, engelle — yakında gelecek');
+  showToast(I18N.t('toast.chat_menu'));
 }
 
 function toggleWitmaMode() {
@@ -1094,7 +1095,7 @@ function toggleWitmaMode() {
   const btn = bar?.querySelector('.witma-toggle');
   if (bar) bar.style.display = S.witmaMode ? '' : 'none';
   if (btn) btn.textContent = S.witmaMode ? 'Kapat' : 'Aç';
-  showToast(S.witmaMode ? 'WITMA çeviri modu açık' : 'WITMA çeviri modu kapalı');
+  showToast(S.witmaMode ? I18N.t('toast.witma_on') : I18N.t('toast.witma_off'));
 }
 
 async function loadMessages() {
@@ -1209,14 +1210,14 @@ async function appendMessage(msg, scroll = true) {
   if (S.witmaMode) {
     if (mine && msg.original_text) {
       // Show what was sent to peer (translated version)
-      translatedHtml = `<div class="msg-translation mine-t">Gönderilen: ${escHtml(msg.text)}</div>`;
+      translatedHtml = `<div class="msg-translation mine-t">${I18N.t('chat.sent_as')} ${escHtml(msg.text)}</div>`;
     } else if (!mine && msg.text) {
       const myLang = S.profile?.language || 'tr';
       const peerLang = S.chatRoom?.peer_profile?.language;
       if (peerLang && peerLang !== myLang) {
         const translated = await translateText(msg.text, peerLang, myLang);
         if (translated && translated !== msg.text) {
-          translatedHtml = `<div class="msg-translation theirs-t">Ceviri: ${escHtml(translated)}</div>`;
+          translatedHtml = `<div class="msg-translation theirs-t">${I18N.t('chat.translation')} ${escHtml(translated)}</div>`;
         }
       }
     }
