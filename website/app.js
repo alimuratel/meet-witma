@@ -668,6 +668,30 @@ function enterApp() {
   loadConversations();
   renderProfile();
   renderCompletion();
+  _startPresence();
+}
+
+let _presenceTimer = null;
+function _startPresence() {
+  const update = () => {
+    if (S.user?.phone) {
+      sb.from('meet_profiles').update({ last_active: new Date().toISOString() }).eq('phone', S.user.phone).then(() => {});
+    }
+  };
+  update();
+  if (_presenceTimer) clearInterval(_presenceTimer);
+  _presenceTimer = setInterval(update, 5 * 60 * 1000);
+}
+
+function _timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 5)  return 'Çevrimiçi';
+  if (mins < 60) return `${mins}d önce`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `${hrs}sa önce`;
+  return `${Math.floor(hrs / 24)}g önce`;
 }
 
 function switchTab(tab) {
@@ -756,6 +780,7 @@ function createCardElement(profile, stackPos) {
     <div class="card-info">
       <div class="card-name">${escHtml(name)} <span>${age}</span></div>
       ${city ? `<div class="card-meta">📍 ${escHtml(city)}</div>` : ''}
+      ${profile.last_active ? `<div class="card-meta card-online${_timeAgo(profile.last_active)==='Çevrimiçi'?' online':''}">${_timeAgo(profile.last_active)}</div>` : ''}
       ${bio ? `<div class="card-bio">${escHtml(bio.slice(0,80))}${bio.length>80?'…':''}</div>` : ''}
       ${interests.length ? `<div class="card-interests">${interests.map(i=>`<div class="card-interest-tag">${escHtml(i)}</div>`).join('')}</div>` : ''}
     </div>
@@ -1081,6 +1106,12 @@ function openChat(info) {
   S.messages = [];
 
   document.getElementById('chat-peer-name').textContent = info.peer_name;
+  const subEl = document.getElementById('chat-peer-sub');
+  if (subEl && info.peer_profile?.last_active) {
+    const ago = _timeAgo(info.peer_profile.last_active);
+    subEl.textContent = ago;
+    subEl.style.color = ago === 'Çevrimiçi' ? 'var(--cyan)' : '';
+  }
   const av = document.getElementById('chat-peer-av');
   av.innerHTML = info.peer_photo ? `<img src="${info.peer_photo}">` : '<div class="conv-avatar-placeholder">😊</div>';
 
@@ -1184,10 +1215,11 @@ async function sendMessage() {
   scrollChatBottom();
 
   const { error } = await sb.from('meet_messages').insert({
-    room_id:      msg.room_id,
-    sender_phone: msg.sender_phone,
-    text:         msg.text,
-    seen:         false,
+    room_id:       msg.room_id,
+    sender_phone:  msg.sender_phone,
+    text:          msg.text,
+    original_text: msg.original_text || null,
+    seen:          false,
   });
 
   if (error) {
