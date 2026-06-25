@@ -1,0 +1,48 @@
+{
+  "cli": {
+    "version": ">= 20.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "ios": {},
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "T37U554YGA",
+        "ascApiKeyPath": "/Users/alimuratel/Desktop/AuthKey_4Q7S3823YT.p8",
+        "ascApiKeyId": "4Q7S3823YT",
+        "ascApiKeyIssuerId": "b81d9c14-cb45-4623-a805-d10c692940cc",
+        "groups": ["Internal"]
+      }
+    }
+  }
+}

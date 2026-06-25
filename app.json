@@ -33,9 +33,26 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "eas": { "projectId": "" }
+      "eas": {
+        "projectId": "6645e1d7-4f5e-4790-bb59-9a112d2149fe"
+      }
     },
-    "runtimeVersion": { "policy": "appVersion" },
-    "updates": { "url": "" }
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6645e1d7-4f5e-4790-bb59-9a112d2149fe"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7C3AED",
+          "sounds": []
+        }
+      ]
+    ],
+    "owner": "a.el"
   }
 }
